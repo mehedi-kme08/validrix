@@ -40,12 +40,15 @@ class TestUserRegistration(BaseTest):
         self.soft_assert(email in self._registered_users, "User should be in registry")
         self.assert_soft_failures()
 
-    @pytest.mark.parametrize("email,password,reason", [
-        ("",               "S3cure!Pass", "empty email"),
-        ("not-an-email",   "S3cure!Pass", "malformed email"),
-        ("alice@test.com", "",            "empty password"),
-        ("alice@test.com", "short",       "password too short"),
-    ])
+    @pytest.mark.parametrize(
+        "email,password,reason",
+        [
+            ("", "S3cure!Pass", "empty email"),
+            ("not-an-email", "S3cure!Pass", "malformed email"),
+            ("alice@test.com", "", "empty password"),
+            ("alice@test.com", "short", "password too short"),
+        ],
+    )
     def test_invalid_inputs_are_rejected(
         self,
         email: str,

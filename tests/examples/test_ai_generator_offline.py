@@ -102,9 +102,7 @@ class TestGeneratorIntegration:
         assert "test_valid_login" in result.code
         assert result.saved_path is None  # no output_path provided
 
-    def test_generate_writes_file_when_output_path_given(
-        self, tmp_path: Path
-    ) -> None:
+    def test_generate_writes_file_when_output_path_given(self, tmp_path: Path) -> None:
         gen = self._make_generator()
         output = tmp_path / "tests" / "test_login.py"
 
@@ -121,5 +119,3 @@ class TestGeneratorIntegration:
         gen.generate("Feature", output_path=deep_path)
 
         assert deep_path.exists()
-
-

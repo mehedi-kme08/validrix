@@ -82,6 +82,7 @@ _ANALYSIS_SYSTEM_PROMPT: Final[str] = textwrap.dedent("""
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class FailureRecord:
     """Captures everything we know about a single test failure."""
@@ -92,9 +93,7 @@ class FailureRecord:
     error_message: str
     traceback: str
     duration_seconds: float
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 @dataclass
@@ -108,12 +107,13 @@ class AIReport:
     failures: list[FailureRecord]
 
     def to_dict(self) -> dict[str, object]:
-        return asdict(self)  # type: ignore[arg-type]
+        return asdict(self)
 
 
 # ---------------------------------------------------------------------------
 # Reporter
 # ---------------------------------------------------------------------------
+
 
 class AIReporterPlugin:
     """
@@ -183,8 +183,7 @@ class AIReporterPlugin:
         api_key = self._ai_config.anthropic_api_key or self._ai_config.openai_api_key
         if not api_key:
             logger.warning(
-                "AIReporter: no API key configured. Skipping AI analysis. "
-                "Set VALIDRIX_AI_ANTHROPIC_API_KEY to enable."
+                "AIReporter: no API key configured. Skipping AI analysis. Set VALIDRIX_AI_ANTHROPIC_API_KEY to enable."
             )
             return
 
@@ -291,7 +290,7 @@ class AIReporterPlugin:
         checkpoint = self._report_dir / "_failures_checkpoint.json"
         checkpoint.write_text(
             json.dumps(
-                [asdict(f) for f in self._failures],  # type: ignore[arg-type]
+                [asdict(f) for f in self._failures],
                 indent=2,
                 default=str,
             ),

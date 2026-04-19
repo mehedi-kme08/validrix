@@ -39,6 +39,11 @@ from validrix.core.retry_manager import RetryConfig, RetryManager
 logger = logging.getLogger(__name__)
 
 
+def _method_name(method: object) -> str:
+    """Return a readable name for pytest lifecycle callbacks."""
+    return getattr(method, "__name__", str(method))
+
+
 class BaseTest(ABC):
     """
     Abstract base for all Validrix test classes.
@@ -77,20 +82,22 @@ class BaseTest(ABC):
         """Per-test setup — called automatically by pytest before each test."""
         self.config = ConfigManager.load()
         self.log = logging.getLogger(type(self).__qualname__)
-        self.retry = RetryManager(RetryConfig(
-            max_attempts=self.config.retry.max_attempts,
-            delay_seconds=self.config.retry.delay_seconds,
-            backoff_multiplier=self.config.retry.backoff_multiplier,
-            jitter=self.config.retry.jitter,
-        ))
+        self.retry = RetryManager(
+            RetryConfig(
+                max_attempts=self.config.retry.max_attempts,
+                delay_seconds=self.config.retry.delay_seconds,
+                backoff_multiplier=self.config.retry.backoff_multiplier,
+                jitter=self.config.retry.jitter,
+            )
+        )
         self._soft_failures = []
-        self.log.info("Starting test: %s", method.__name__ if callable(method) else method)
+        self.log.info("Starting test: %s", _method_name(method))
 
     def teardown_method(self, method: object) -> None:
         """Per-test teardown — called automatically by pytest after each test."""
         self.log.info(
             "Finished test: %s",
-            method.__name__ if callable(method) else method,
+            _method_name(method),
         )
 
     # ------------------------------------------------------------------

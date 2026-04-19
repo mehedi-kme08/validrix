@@ -45,6 +45,7 @@ from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, Settings
 # VALIDRIX_RETRY__MAX_ATTEMPTS (nested delimiter).  Single-source wins.
 # ---------------------------------------------------------------------------
 
+
 class AIConfig(BaseModel):
     """Configuration for AI provider credentials and behaviour."""
 
@@ -121,6 +122,7 @@ class EnvironmentConfig(BaseModel):
 # Root config model
 # ---------------------------------------------------------------------------
 
+
 class FrameworkConfig(BaseSettings):
     """
     Top-level configuration model for the entire Validrix framework.
@@ -130,7 +132,7 @@ class FrameworkConfig(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="VALIDRIX_",
-        env_nested_delimiter="__",   # VALIDRIX_AI__MODEL=... maps to ai.model
+        env_nested_delimiter="__",  # VALIDRIX_AI__MODEL=... maps to ai.model
         extra="ignore",
     )
 
@@ -171,6 +173,7 @@ class FrameworkConfig(BaseSettings):
 # ---------------------------------------------------------------------------
 # ConfigManager — singleton loader
 # ---------------------------------------------------------------------------
+
 
 class ConfigManager:
     """

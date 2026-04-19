@@ -41,6 +41,7 @@ from enum import StrEnum
 from typing import Any
 
 import pytest
+from _pytest.runner import runtestprotocol
 
 from validrix.core.config_manager import ConfigManager, FlakyConfig
 
@@ -51,8 +52,10 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 class FlakinessLabel(StrEnum):
     """Classification of a test's reliability based on its pass rate."""
+
     STABLE = "STABLE"  # Always passes
     FLAKY = "FLAKY"  # Mixed results
     FAILING = "FAILING"  # Never passes
@@ -114,7 +117,7 @@ class FlakinessMetric:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        d = asdict(self)  # type: ignore[arg-type]
+        d = asdict(self)
         d["label"] = self.label.value
         return d
 
@@ -146,6 +149,7 @@ class FlakyReport:
 # ---------------------------------------------------------------------------
 # Plugin
 # ---------------------------------------------------------------------------
+
 
 class FlakyDetectorPlugin:
     """
@@ -246,9 +250,7 @@ class FlakyDetectorPlugin:
             for report in self._execute_item(item):
                 reports.append(report)
 
-            call_report = next(
-                (r for r in reports if r.when == "call"), None
-            )
+            call_report = next((r for r in reports if r.when == "call"), None)
 
             passed = call_report.passed if call_report else False
             duration = call_report.duration if call_report else 0.0
@@ -256,27 +258,26 @@ class FlakyDetectorPlugin:
 
             if call_report and call_report.failed:
                 longrepr = (
-                    call_report.longreprtext
-                    if hasattr(call_report, "longreprtext")
-                    else str(call_report.longrepr)
+                    call_report.longreprtext if hasattr(call_report, "longreprtext") else str(call_report.longrepr)
                 )
                 error_msg = longrepr[-500:]  # Truncate to avoid huge reports
 
-            results.append(RunResult(
-                run_number=run_number,
-                passed=passed,
-                duration_seconds=duration,
-                error_message=error_msg,
-            ))
-            logger.debug("Run %d/%d for %s: %s", run_number, n, item.nodeid,
-                         "PASS" if passed else "FAIL")
+            results.append(
+                RunResult(
+                    run_number=run_number,
+                    passed=passed,
+                    duration_seconds=duration,
+                    error_message=error_msg,
+                )
+            )
+            logger.debug("Run %d/%d for %s: %s", run_number, n, item.nodeid, "PASS" if passed else "FAIL")
 
         return results
 
     @staticmethod
     def _execute_item(item: pytest.Item) -> Generator[pytest.TestReport, None, None]:
         """Run setup/call/teardown for ``item`` and yield each phase report."""
-        reports = pytest.runner.runtestprotocol(item, log=False)
+        reports = runtestprotocol(item, log=False)
         yield from reports
 
     def pytest_sessionfinish(
@@ -288,10 +289,7 @@ class FlakyDetectorPlugin:
         if not self._run_counts:
             return
 
-        results = [
-            FlakinessMetric.compute(test_id, runs)
-            for test_id, runs in self._run_counts.items()
-        ]
+        results = [FlakinessMetric.compute(test_id, runs) for test_id, runs in self._run_counts.items()]
 
         report = FlakyReport(
             generated_at=datetime.now(UTC).isoformat(),

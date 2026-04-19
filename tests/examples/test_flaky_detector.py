@@ -22,10 +22,7 @@ class TestFlakinessComputation:
     """Unit tests for flakiness metric calculation."""
 
     def _make_results(self, passed: list[bool]) -> list[RunResult]:
-        return [
-            RunResult(run_number=i + 1, passed=p, duration_seconds=0.1)
-            for i, p in enumerate(passed)
-        ]
+        return [RunResult(run_number=i + 1, passed=p, duration_seconds=0.1) for i, p in enumerate(passed)]
 
     def test_all_passing_is_stable(self) -> None:
         """A test that always passes should be STABLE with score 0.0."""
@@ -63,12 +60,15 @@ class TestFlakinessComputation:
 
         assert metric.flakiness_score == 1.0, "Score should be 1.0 at 50% pass rate"
 
-    @pytest.mark.parametrize("passed,expected_label", [
-        ([True, True, True, True],        FlakinessLabel.STABLE),
-        ([False, False, False, False],     FlakinessLabel.FAILING),
-        ([True, False, True, False],       FlakinessLabel.FLAKY),
-        ([True, True, True, False],        FlakinessLabel.FLAKY),
-    ])
+    @pytest.mark.parametrize(
+        "passed,expected_label",
+        [
+            ([True, True, True, True], FlakinessLabel.STABLE),
+            ([False, False, False, False], FlakinessLabel.FAILING),
+            ([True, False, True, False], FlakinessLabel.FLAKY),
+            ([True, True, True, False], FlakinessLabel.FLAKY),
+        ],
+    )
     def test_label_classification(
         self,
         passed: list[bool],
@@ -86,8 +86,15 @@ class TestFlakinessComputation:
         d = metric.to_dict()
 
         required_keys = {
-            "test_id", "test_name", "total_runs", "passed_runs",
-            "failed_runs", "pass_rate", "label", "flakiness_score", "runs",
+            "test_id",
+            "test_name",
+            "total_runs",
+            "passed_runs",
+            "failed_runs",
+            "pass_rate",
+            "label",
+            "flakiness_score",
+            "runs",
         }
         assert required_keys.issubset(d.keys()), f"Missing keys: {required_keys - d.keys()}"
         assert isinstance(d["label"], str), "label should be serialised as string"

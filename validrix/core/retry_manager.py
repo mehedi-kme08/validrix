@@ -51,9 +51,7 @@ class RetryConfig:
     delay_seconds: float = 1.0
     backoff_multiplier: float = 2.0
     jitter: bool = True
-    exceptions: Sequence[type[BaseException]] = field(
-        default_factory=lambda: [Exception]
-    )
+    exceptions: Sequence[type[BaseException]] = field(default_factory=lambda: [Exception])
 
     def __post_init__(self) -> None:
         if self.max_attempts < 1:
@@ -108,6 +106,7 @@ def retry(
         jitter=jitter,
         exceptions=list(exceptions),
     )
+    retry_exceptions = tuple(effective.exceptions)
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
@@ -118,7 +117,7 @@ def retry(
             for attempt in range(1, effective.max_attempts + 1):
                 try:
                     return func(*args, **kwargs)
-                except tuple(effective.exceptions) as exc:  # type: ignore[misc]
+                except retry_exceptions as exc:
                     last_exc = exc
                     if attempt == effective.max_attempts:
                         logger.warning(

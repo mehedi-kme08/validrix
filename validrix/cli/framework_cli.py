@@ -46,6 +46,7 @@ console = Console()
 # Root group
 # ---------------------------------------------------------------------------
 
+
 @click.group(
     context_settings={"help_option_names": ["-h", "--help"]},
     invoke_without_command=True,
@@ -60,21 +61,25 @@ def cli(ctx: click.Context) -> None:
     Run `validrix COMMAND --help` for detailed help on any command.
     """
     if ctx.invoked_subcommand is None:
-        console.print(Panel.fit(
-            "[bold cyan]validrix[/] — Validrix AI Test Framework\n\n"
-            "Run [bold]validrix --help[/] to see available commands.",
-            border_style="cyan",
-        ))
+        console.print(
+            Panel.fit(
+                "[bold cyan]validrix[/] — Validrix AI Test Framework\n\n"
+                "Run [bold]validrix --help[/] to see available commands.",
+                border_style="cyan",
+            )
+        )
 
 
 # ---------------------------------------------------------------------------
 # generate command
 # ---------------------------------------------------------------------------
 
+
 @cli.command("generate")
 @click.argument("description")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     default=None,
     help="Output file path for generated tests (e.g., tests/test_login.py).",
 )
@@ -85,7 +90,8 @@ def cli(ctx: click.Context) -> None:
     help="AI provider to use (overrides config).",
 )
 @click.option(
-    "--context", "-c",
+    "--context",
+    "-c",
     default="",
     help="Additional context or instructions for the AI.",
 )
@@ -150,9 +156,11 @@ def generate(
 # run command
 # ---------------------------------------------------------------------------
 
+
 @cli.command("run")
 @click.option(
-    "--env", "-e",
+    "--env",
+    "-e",
     default="dev",
     show_default=True,
     help="Target environment (dev | staging | prod).",
@@ -169,7 +177,8 @@ def generate(
     help="Enable flaky test detection (runs each test multiple times).",
 )
 @click.option(
-    "--marker", "-m",
+    "--marker",
+    "-m",
     default=None,
     help="pytest -m marker expression (e.g., 'smoke and not slow').",
 )
@@ -193,6 +202,7 @@ def run(
       validrix run -- -k test_login -v
     """
     import os
+
     os.environ["VALIDRIX_ENVIRONMENT"] = env
 
     if docker:
@@ -235,8 +245,12 @@ def _run_in_docker(
     pytest_flags += list(extra_args)
 
     cmd = [
-        "docker", "compose", "run", "--rm",
-        "-e", f"VALIDRIX_ENVIRONMENT={env}",
+        "docker",
+        "compose",
+        "run",
+        "--rm",
+        "-e",
+        f"VALIDRIX_ENVIRONMENT={env}",
         "validrix",
         "pytest",
         *pytest_flags,
@@ -251,9 +265,11 @@ def _run_in_docker(
 # report command
 # ---------------------------------------------------------------------------
 
+
 @cli.command("report")
 @click.option(
-    "--output-dir", "-d",
+    "--output-dir",
+    "-d",
     default="validrix_reports",
     show_default=True,
     help="Directory containing the failure checkpoint.",
@@ -294,10 +310,12 @@ def report(output_dir: str) -> None:
 # scaffold command
 # ---------------------------------------------------------------------------
 
+
 @cli.command("scaffold")
 @click.argument("project_name")
 @click.option(
-    "--destination", "-d",
+    "--destination",
+    "-d",
     default=".",
     help="Parent directory for the new project.",
 )

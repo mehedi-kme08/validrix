@@ -49,6 +49,7 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class HealingEvent:
     """Records a single self-healing locator resolution."""
@@ -57,9 +58,7 @@ class HealingEvent:
     original_selector: str
     successful_strategy: str
     healed_selector: str
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     duration_ms: float = 0.0
 
 
@@ -73,7 +72,7 @@ class HealingHistory:
     def to_dict(self) -> dict[str, object]:
         return {
             "total_healed": self.total_healed,
-            "events": [asdict(e) for e in self.events],  # type: ignore[arg-type]
+            "events": [asdict(e) for e in self.events],
         }
 
 
@@ -113,6 +112,7 @@ class PageLike(Protocol):
 # ---------------------------------------------------------------------------
 # Strategy implementations
 # ---------------------------------------------------------------------------
+
 
 @runtime_checkable
 class HealingStrategy(Protocol):
@@ -237,6 +237,7 @@ _DEFAULT_STRATEGIES: list[HealingStrategy] = [
 # Healing page proxy
 # ---------------------------------------------------------------------------
 
+
 class HealingPage:
     """
     Proxy around a Playwright Page that applies fallback locator strategies.
@@ -312,8 +313,7 @@ class HealingPage:
 
         # All strategies exhausted — fall back to native (will raise naturally)
         logger.warning(
-            "SelfHealing: all strategies exhausted for selector %r. "
-            "Returning native locator — test will likely fail.",
+            "SelfHealing: all strategies exhausted for selector %r. Returning native locator — test will likely fail.",
             original,
         )
         return self._page.locator(original, **kwargs)
@@ -326,6 +326,7 @@ class HealingPage:
 # ---------------------------------------------------------------------------
 # pytest plugin
 # ---------------------------------------------------------------------------
+
 
 class SelfHealingPlugin:
     """
@@ -354,7 +355,7 @@ class SelfHealingPlugin:
         self,
         page: PageLike,  # Playwright's built-in `page` fixture
         request: pytest.FixtureRequest,
-    ) -> HealingPage:
+    ) -> HealingPage | PageLike:
         """
         Playwright Page wrapped with self-healing locator strategies.
 
@@ -365,7 +366,7 @@ class SelfHealingPlugin:
                 healing_page.locator("#email").fill("user@example.com")
         """
         if not self._healing_config.enabled:
-            return page  # type: ignore[return-value]
+            return page
 
         return HealingPage(
             page=page,

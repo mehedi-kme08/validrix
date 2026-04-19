@@ -21,6 +21,11 @@ from validrix.plugins.self_healing import SelfHealingPlugin
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register all built-in Validrix plugins with the pytest plugin manager."""
-    config.pluginmanager.register(FlakyDetectorPlugin(config), "validrix-flaky")
-    config.pluginmanager.register(AIReporterPlugin(config), "validrix-ai-reporter")
-    config.pluginmanager.register(SelfHealingPlugin(config), "validrix-self-healing")
+    plugin_manager = config.pluginmanager
+
+    if not plugin_manager.hasplugin("validrix-flaky"):
+        plugin_manager.register(FlakyDetectorPlugin(config), "validrix-flaky")
+    if not plugin_manager.hasplugin("validrix-ai-reporter"):
+        plugin_manager.register(AIReporterPlugin(config), "validrix-ai-reporter")
+    if not plugin_manager.hasplugin("validrix-self-healing"):
+        plugin_manager.register(SelfHealingPlugin(config), "validrix-self-healing")

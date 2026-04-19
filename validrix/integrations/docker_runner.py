@@ -52,9 +52,7 @@ class DockerRunner:
             OSError: If `docker` is not on PATH.
         """
         if not shutil.which("docker"):
-            raise OSError(
-                "docker is not on PATH. Install Docker Desktop and retry."
-            )
+            raise OSError("docker is not on PATH. Install Docker Desktop and retry.")
         self._compose_file = compose_file or Path("docker-compose.yml")
 
     def run(
@@ -91,9 +89,12 @@ class DockerRunner:
             env_flags += ["-e", f"{key}={value}"]
 
         return [
-            "docker", "compose",
-            "-f", str(self._compose_file),
-            "run", "--rm",
+            "docker",
+            "compose",
+            "-f",
+            str(self._compose_file),
+            "run",
+            "--rm",
             *env_flags,
             self.SERVICE_NAME,
             "pytest",
@@ -111,8 +112,10 @@ class DockerRunner:
             docker compose build exit code.
         """
         cmd = [
-            "docker", "compose",
-            "-f", str(self._compose_file),
+            "docker",
+            "compose",
+            "-f",
+            str(self._compose_file),
             "build",
         ]
         if no_cache:

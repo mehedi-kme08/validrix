@@ -76,6 +76,7 @@ _SYSTEM_PROMPT: Final[str] = textwrap.dedent("""
 # LLM client abstraction
 # ---------------------------------------------------------------------------
 
+
 class _LLMClient(ABC):
     """Abstract LLM client — swap providers without changing generation logic."""
 
@@ -145,6 +146,7 @@ def _make_client(config: AIConfig) -> _LLMClient:
 # Generation result
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class GenerationResult:
     """
@@ -166,6 +168,7 @@ class GenerationResult:
 # ---------------------------------------------------------------------------
 # Standalone generator (used by CLI and programmatic API)
 # ---------------------------------------------------------------------------
+
 
 class AITestGenerator:
     """
@@ -269,8 +272,7 @@ class AITestGenerator:
             return stripped
 
         raise ValueError(
-            "AI response contained no extractable Python code. "
-            f"Raw response (first 200 chars): {raw[:200]!r}"
+            f"AI response contained no extractable Python code. Raw response (first 200 chars): {raw[:200]!r}"
         )
 
     @staticmethod
@@ -296,6 +298,7 @@ class AITestGenerator:
 # ---------------------------------------------------------------------------
 # pytest plugin wrapper — consumed by pytest11 entry point
 # ---------------------------------------------------------------------------
+
 
 class AIGeneratorPlugin:
     """
