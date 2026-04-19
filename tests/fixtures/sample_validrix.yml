@@ -1,0 +1,14 @@
+default:
+  environment: dev
+  report_dir: reports
+  retry:
+    max_attempts: 4
+    delay_seconds: 0.25
+    backoff_multiplier: 3.0
+    jitter: false
+  flaky:
+    threshold: 0.25
+environments:
+  staging:
+    env:
+      base_url: https://staging.example.com
