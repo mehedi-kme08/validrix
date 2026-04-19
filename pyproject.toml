@@ -102,10 +102,10 @@ validrix-healing    = "validrix.plugins.self_healing"
 validrix-ai-report  = "validrix.plugins.ai_reporter"
 
 # ---------------------------------------------------------------------------
-# CLI entry point — installs `qforge` command
+# CLI entry point — installs `validrix` command
 # ---------------------------------------------------------------------------
 [project.scripts]
-qforge = "validrix.cli.framework_cli:cli"
+validrix = "validrix.cli.framework_cli:cli"
 
 # ---------------------------------------------------------------------------
 # Tool configuration

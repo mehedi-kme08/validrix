@@ -172,7 +172,7 @@ class AITestGenerator:
     Generates pytest test functions from plain-English descriptions.
 
     This is the primary Validrix AI feature. It exposes both a programmatic
-    API (``generate()``) and integrates with the CLI (``qforge generate``).
+    API (``generate()``) and integrates with the CLI (``validrix generate``).
 
     Example::
 
@@ -301,7 +301,7 @@ class AIGeneratorPlugin:
     """
     Validrix AI Generator — pytest plugin wrapper.
 
-    The generator itself is invoked via the CLI (``qforge generate``).
+    The generator itself is invoked via the CLI (``validrix generate``).
     This class satisfies the pytest11 entry-point contract and exposes
     the underlying AITestGenerator for programmatic access.
     """

@@ -1,5 +1,5 @@
 """
-framework_cli.py — qforge CLI entry point.
+framework_cli.py — validrix CLI entry point.
 
 Design decision: Click over argparse / Typer.
   WHY: Click's decorator API co-locates command definition with its handler,
@@ -20,10 +20,10 @@ Design decision: Click over argparse / Typer.
       supports ANSI; Click handles plain text fallback automatically.
 
 Commands:
-  qforge generate "<description>"   → AI test generation
-  qforge run [--env ENV]            → run tests via Docker
-  qforge report                     → generate AI failure summary
-  qforge scaffold <name>            → scaffold a new test project
+  validrix generate "<description>"   → AI test generation
+  validrix run [--env ENV]            → run tests via Docker
+  validrix report                     → generate AI failure summary
+  validrix scaffold <name>            → scaffold a new test project
 """
 
 from __future__ import annotations
@@ -50,19 +50,19 @@ console = Console()
     context_settings={"help_option_names": ["-h", "--help"]},
     invoke_without_command=True,
 )
-@click.version_option(package_name="validrix", prog_name="qforge")
+@click.version_option(package_name="validrix", prog_name="validrix")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
     """
-    qforge — Validrix AI-Powered Test Framework CLI.
+    validrix — Validrix AI-Powered Test Framework CLI.
 
     \b
-    Run `qforge COMMAND --help` for detailed help on any command.
+    Run `validrix COMMAND --help` for detailed help on any command.
     """
     if ctx.invoked_subcommand is None:
         console.print(Panel.fit(
-            "[bold cyan]qforge[/] — Validrix AI Test Framework\n\n"
-            "Run [bold]qforge --help[/] to see available commands.",
+            "[bold cyan]validrix[/] — Validrix AI Test Framework\n\n"
+            "Run [bold]validrix --help[/] to see available commands.",
             border_style="cyan",
         ))
 
@@ -107,9 +107,9 @@ def generate(
 
     \b
     Examples:
-      qforge generate "Login page with email and password fields"
-      qforge generate "REST API /users endpoint" -o tests/test_users.py
-      qforge generate "Checkout flow" --provider openai --dry-run
+      validrix generate "Login page with email and password fields"
+      validrix generate "REST API /users endpoint" -o tests/test_users.py
+      validrix generate "Checkout flow" --provider openai --dry-run
     """
     from validrix.core.config_manager import ConfigManager
     from validrix.plugins.ai_generator import AITestGenerator
@@ -186,11 +186,11 @@ def run(
 
     \b
     Examples:
-      qforge run
-      qforge run --env staging
-      qforge run --docker --env prod
-      qforge run --detect-flaky -m smoke
-      qforge run -- -k test_login -v
+      validrix run
+      validrix run --env staging
+      validrix run --docker --env prod
+      validrix run --detect-flaky -m smoke
+      validrix run -- -k test_login -v
     """
     import os
     os.environ["VALIDRIX_ENVIRONMENT"] = env
@@ -267,8 +267,8 @@ def report(output_dir: str) -> None:
 
     \b
     Example:
-      qforge report
-      qforge report --output-dir custom_reports/
+      validrix report
+      validrix report --output-dir custom_reports/
     """
     from validrix.core.config_manager import ConfigManager
     from validrix.plugins.ai_reporter import AIReporterPlugin
@@ -307,8 +307,8 @@ def scaffold(project_name: str, destination: str) -> None:
 
     \b
     Example:
-      qforge scaffold my_test_suite
-      qforge scaffold my_tests --destination ~/projects/
+      validrix scaffold my_test_suite
+      validrix scaffold my_tests --destination ~/projects/
     """
     dest = Path(destination) / project_name
 
@@ -338,7 +338,7 @@ def scaffold(project_name: str, destination: str) -> None:
         f"\n[cyan]Next steps:[/]\n"
         f"  cd {dest}\n"
         f"  pip install -e '.[dev]'\n"
-        f"  qforge generate 'Your first feature description'\n"
+        f"  validrix generate 'Your first feature description'\n"
     )
 
 

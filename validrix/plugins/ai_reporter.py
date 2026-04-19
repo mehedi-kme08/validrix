@@ -17,7 +17,7 @@ Design decision: Post-session hook, not inline failure handling.
   Tradeoffs:
     - If the session is killed mid-run, no report is generated.
       Mitigation: we write a JSON checkpoint after each failure so the
-      CLI's `qforge report` command can resume from it.
+      CLI's `validrix report` command can resume from it.
     - Report generation adds ~5-15 s at session end. We make this opt-in
       (requires VALIDRIX_AI_ANTHROPIC_API_KEY to be set).
 
@@ -167,7 +167,7 @@ class AIReporterPlugin:
             )
         )
 
-        # Write a checkpoint so `qforge report` can resume if session dies
+        # Write a checkpoint so `validrix report` can resume if session dies
         self._write_checkpoint()
 
     def pytest_sessionfinish(
@@ -299,14 +299,14 @@ class AIReporterPlugin:
         )
 
     # ------------------------------------------------------------------
-    # Standalone entry point for `qforge report`
+    # Standalone entry point for `validrix report`
     # ------------------------------------------------------------------
 
     def generate_from_checkpoint(self) -> Path | None:
         """
         Read the failure checkpoint and generate a report without a live session.
 
-        Used by ``qforge report`` when called after a test run.
+        Used by ``validrix report`` when called after a test run.
 
         Returns:
             Path to the generated Markdown report, or None if no checkpoint exists.

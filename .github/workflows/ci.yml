@@ -133,7 +133,7 @@ jobs:
         run: |
           pip install dist/*.whl
           python -c "import validrix; print(validrix.__version__)"
-          qforge --version
+          validrix --version
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

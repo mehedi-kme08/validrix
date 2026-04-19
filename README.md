@@ -41,7 +41,7 @@ Validrix attacks all three problems in a single, composable framework.
 Convert a plain-English description into a complete, runnable test file in seconds.
 
 ```bash
-qforge generate "Login page with email, password, and Remember Me checkbox"
+validrix generate "Login page with email, password, and Remember Me checkbox"
 ```
 
 ```python
@@ -173,7 +173,7 @@ export VALIDRIX_AI_ANTHROPIC_API_KEY="sk-ant-..."
 ### Generate Your First Test
 
 ```bash
-qforge generate "User registration with name, email, and password validation"
+validrix generate "User registration with name, email, and password validation"
 ```
 
 ### Run Tests
@@ -186,10 +186,10 @@ pytest tests/
 pytest --detect-flaky --flaky-runs=3
 
 # In Docker
-qforge run --docker --env staging
+validrix run --docker --env staging
 
 # Generate AI failure report after a run
-qforge report
+validrix report
 ```
 
 ---
@@ -198,7 +198,7 @@ qforge report
 
 ```mermaid
 graph TB
-    subgraph CLI["🖥 CLI Layer (qforge)"]
+    subgraph CLI["🖥 CLI Layer (validrix)"]
         G[generate] --> TG[TestGenerator]
         R[run] --> DR[DockerRunner]
         RP[report] --> AR[AIReporterPlugin]
@@ -256,22 +256,22 @@ graph TB
 ## 🖥 CLI Reference
 
 ```
-qforge generate "<description>"          Generate AI test cases
+validrix generate "<description>"          Generate AI test cases
   --output / -o <path>                   Save to file
   --provider [anthropic|openai]          Override AI provider
   --context / -c "<extra instructions>"  Additional prompt context
   --dry-run                              Print without saving
 
-qforge run                               Run test suite
+validrix run                               Run test suite
   --env [dev|staging|prod]              Target environment
   --docker                               Run inside Docker
   --detect-flaky                         Enable flaky detection
   --marker / -m "<expression>"           pytest -m filter
 
-qforge report                            Generate AI failure summary
+validrix report                            Generate AI failure summary
   --output-dir / -d <path>              Report directory
 
-qforge scaffold <project_name>           Scaffold new test project
+validrix scaffold <project_name>           Scaffold new test project
   --destination / -d <path>             Parent directory
 ```
 
@@ -360,7 +360,7 @@ VALIDRIX_RETRY__MAX_ATTEMPTS=5              # nested: RETRY__MAX_ATTEMPTS
 
 **Why**: Cross-failure pattern analysis (seeing that 8 of 10 failures share the same `401` error) produces dramatically better root-cause summaries than per-failure analysis. One API call vs. N calls also reduces cost and latency.
 
-**Tradeoff accepted**: If the session is killed mid-run, we miss the report. Mitigation: we write a JSON checkpoint after each failure, so `qforge report` can resume.
+**Tradeoff accepted**: If the session is killed mid-run, we miss the report. Mitigation: we write a JSON checkpoint after each failure, so `validrix report` can resume.
 
 ---
 
