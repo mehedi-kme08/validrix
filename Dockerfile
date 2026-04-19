@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy project manifest first — Docker cache layer stays valid until toml changes
 COPY pyproject.toml ./
+COPY README.md LICENSE ./
 COPY validrix/ ./validrix/
 
 # Install into a prefix so we can copy it to the final stage
@@ -43,7 +44,7 @@ FROM python:3.11-slim-bookworm AS runtime
 
 LABEL org.opencontainers.image.title="Validrix"
 LABEL org.opencontainers.image.description="AI-Powered PyTest Plugin Framework"
-LABEL org.opencontainers.image.source="https://github.com/yourusername/validrix"
+LABEL org.opencontainers.image.source="https://github.com/mehedi-kme08/validrix"
 
 # Playwright's Chromium needs these system libs
 RUN apt-get update && apt-get install -y --no-install-recommends \
