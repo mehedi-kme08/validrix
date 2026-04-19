@@ -23,8 +23,12 @@ class TestConfigManager:
         """Reset the LRU cache before each test."""
         ConfigManager.reset()
 
-    def test_loads_defaults_without_config_file(self) -> None:
+    def test_loads_defaults_without_config_file(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Config loads with sensible defaults when no YAML file is present."""
+        monkeypatch.delenv("VALIDRIX_ENVIRONMENT", raising=False)
         cfg = ConfigManager.load(config_path="/nonexistent/path.yml" if False else None)
         assert cfg.environment == "dev"
         assert cfg.ai.provider == "anthropic"
