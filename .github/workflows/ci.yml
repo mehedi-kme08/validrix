@@ -161,6 +161,7 @@ jobs:
           context: .
           target: runtime
           push: false
+          load: true
           tags: validrix:ci-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
