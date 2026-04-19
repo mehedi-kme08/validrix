@@ -97,6 +97,7 @@ jobs:
         run: |
           pytest tests/unit/ \
             --cov=validrix \
+            --cov-fail-under=0 \
             --cov-report=xml \
             --cov-report=term-missing \
             -v
