@@ -28,7 +28,7 @@ description = "AI-Powered PyTest Plugin Framework with self-healing locators, fl
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
-authors = [{ name = "Mehedi Hasan", email = "mhasan.kme@gmail.com" }]
+authors = [{ name = "Mehedi Hasan" }]
 keywords = ["pytest", "testing", "ai", "automation", "playwright", "framework"]
 classifiers = [
     "Development Status :: 3 - Alpha",

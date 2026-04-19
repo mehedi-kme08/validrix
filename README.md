@@ -6,7 +6,7 @@
 
 ### AI-Powered PyTest Plugin Framework
 
-[![CI](https://github.com/yourusername/validrix/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/validrix/actions/workflows/ci.yml)
+[![CI](https://github.com/mehedi-kme08/validrix/actions/workflows/ci.yml/badge.svg)](https://github.com/mehedi-kme08/validrix/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -138,7 +138,7 @@ pip install validrix
 Or from source:
 
 ```bash
-git clone https://github.com/yourusername/validrix.git
+git clone https://github.com/mehedi-kme08/validrix.git
 cd validrix
 pip install -e ".[dev]"
 playwright install chromium
