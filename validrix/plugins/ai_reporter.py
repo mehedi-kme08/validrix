@@ -32,7 +32,7 @@ import json
 import logging
 import textwrap
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
@@ -93,7 +93,7 @@ class FailureRecord:
     traceback: str
     duration_seconds: float
     timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
 
 
@@ -201,9 +201,9 @@ class AIReporterPlugin:
             return
 
         report = AIReport(
-            session_id=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S"),
+            session_id=datetime.now(UTC).strftime("%Y%m%dT%H%M%S"),
             total_failures=len(self._failures),
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             summary_markdown=summary,
             failures=self._failures,
         )
@@ -326,9 +326,9 @@ class AIReporterPlugin:
 
         summary = self._analyse_failures(self._failures)
         report = AIReport(
-            session_id=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S"),
+            session_id=datetime.now(UTC).strftime("%Y%m%dT%H%M%S"),
             total_failures=len(self._failures),
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             summary_markdown=summary,
             failures=self._failures,
         )

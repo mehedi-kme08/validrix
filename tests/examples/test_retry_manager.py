@@ -76,7 +76,7 @@ class TestRetryDecorator:
         def fails_three_times() -> str:
             calls.append(1)
             if len(calls) < 4:
-                raise IOError("IO error")
+                raise OSError("IO error")
             return "done"
 
         result = fails_three_times()

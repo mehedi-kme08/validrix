@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from validrix.plugins.flaky_detector import FlakyDetectorPlugin
 from validrix.plugins.ai_reporter import AIReporterPlugin
+from validrix.plugins.flaky_detector import FlakyDetectorPlugin
 from validrix.plugins.self_healing import SelfHealingPlugin
 
 

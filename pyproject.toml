@@ -121,11 +121,11 @@ addopts   = "-ra -q --tb=short"
 
 [tool.ruff]
 target-version = "py311"
-line-length    = 100
+line-length    = 120
 
 [tool.ruff.lint]
-select  = ["E", "F", "I", "UP", "B", "SIM", "ANN"]
-ignore  = ["ANN101", "ANN102"]  # skip self/cls annotations
+select  = ["E", "F", "I", "UP", "B", "SIM"]
+ignore  = []
 
 [tool.mypy]
 python_version         = "3.11"

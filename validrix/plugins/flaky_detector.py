@@ -34,11 +34,11 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
+from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from pathlib import Path
-from typing import Any, Generator
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 import pytest
 
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 # Data structures
 # ---------------------------------------------------------------------------
 
-class FlakinessLabel(str, Enum):
+class FlakinessLabel(StrEnum):
     """Classification of a test's reliability based on its pass rate."""
     STABLE   = "STABLE"    # Always passes
     FLAKY    = "FLAKY"     # Mixed results
@@ -83,7 +83,7 @@ class FlakinessMetric:
     runs: list[RunResult] = field(default_factory=list)
 
     @classmethod
-    def compute(cls, test_id: str, results: list[RunResult]) -> "FlakinessMetric":
+    def compute(cls, test_id: str, results: list[RunResult]) -> FlakinessMetric:
         """Compute flakiness metrics from a list of run results."""
         total = len(results)
         passed = sum(1 for r in results if r.passed)
@@ -255,7 +255,11 @@ class FlakyDetectorPlugin:
             error_msg = ""
 
             if call_report and call_report.failed:
-                longrepr = call_report.longreprtext if hasattr(call_report, "longreprtext") else str(call_report.longrepr)
+                longrepr = (
+                    call_report.longreprtext
+                    if hasattr(call_report, "longreprtext")
+                    else str(call_report.longrepr)
+                )
                 error_msg = longrepr[-500:]  # Truncate to avoid huge reports
 
             results.append(RunResult(
@@ -290,7 +294,7 @@ class FlakyDetectorPlugin:
         ]
 
         report = FlakyReport(
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             total_tests_checked=len(results),
             total_flaky=sum(1 for r in results if r.label == FlakinessLabel.FLAKY),
             total_failing=sum(1 for r in results if r.label == FlakinessLabel.FAILING),

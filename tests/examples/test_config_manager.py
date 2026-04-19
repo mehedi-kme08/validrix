@@ -7,13 +7,13 @@ and per-environment settings.
 
 from __future__ import annotations
 
-import os
 import textwrap
 from pathlib import Path
 
+import pydantic
 import pytest
 
-from validrix.core.config_manager import ConfigManager, FrameworkConfig
+from validrix.core.config_manager import ConfigManager
 
 
 class TestConfigManager:
@@ -110,5 +110,5 @@ class TestConfigManager:
         config_file = tmp_path / "validrix.yml"
         config_file.write_text(yaml_content)
 
-        with pytest.raises(Exception):  # pydantic.ValidationError
+        with pytest.raises(pydantic.ValidationError):
             ConfigManager.load(config_path=config_file)

@@ -22,7 +22,6 @@ from __future__ import annotations
 import logging
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -53,7 +52,7 @@ class DockerRunner:
             EnvironmentError: If `docker` is not on PATH.
         """
         if not shutil.which("docker"):
-            raise EnvironmentError(
+            raise OSError(
                 "docker is not on PATH. Install Docker Desktop and retry."
             )
         self._compose_file = compose_file or Path("docker-compose.yml")

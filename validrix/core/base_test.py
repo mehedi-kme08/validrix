@@ -28,7 +28,7 @@ Lifecycle hooks (called by pytest's xunit-style setup/teardown):
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any
 
 import pytest
@@ -163,14 +163,3 @@ class BaseTest(ABC):
 
         pytest.fail(message or f"Condition not met within {timeout_seconds}s")
 
-    # ------------------------------------------------------------------
-    # Abstract hooks (optional override in subclasses)
-    # ------------------------------------------------------------------
-
-    @classmethod
-    def setup_class(cls) -> None:
-        """Class-level setup — override in subclass if needed."""
-
-    @classmethod
-    def teardown_class(cls) -> None:
-        """Class-level teardown — override in subclass if needed."""

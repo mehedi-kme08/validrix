@@ -6,7 +6,7 @@ that downstream consumers need. Internal modules are imported lazily to avoid
 circular imports and keep startup time fast.
 """
 
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
 try:
     __version__ = version("validrix")

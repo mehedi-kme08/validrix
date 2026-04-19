@@ -34,7 +34,6 @@ import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
-
 # ---------------------------------------------------------------------------
 # Sub-models — plain BaseModel (not BaseSettings).
 #
@@ -163,7 +162,7 @@ class FrameworkConfig(BaseSettings):
         return Path(v)
 
     @model_validator(mode="after")
-    def _sync_env_name(self) -> "FrameworkConfig":
+    def _sync_env_name(self) -> FrameworkConfig:
         """Keep EnvironmentConfig.name consistent with root environment field."""
         self.env.name = self.environment
         return self

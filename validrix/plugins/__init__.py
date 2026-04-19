@@ -14,8 +14,8 @@ Entry point group: "validrix.plugins"
 
 from validrix.plugins.ai_generator import AIGeneratorPlugin, AITestGenerator
 from validrix.plugins.ai_reporter import AIReporterPlugin
-from validrix.plugins.self_healing import SelfHealingPlugin
 from validrix.plugins.flaky_detector import FlakyDetectorPlugin
+from validrix.plugins.self_healing import SelfHealingPlugin
 
 __all__ = [
     "AIGeneratorPlugin",
