@@ -1,0 +1,95 @@
+# =============================================================================
+# docker-compose.yml — Validrix local development and CI services
+#
+# Design decision: Compose v3 syntax with profiles.
+#   WHY: Profiles let us start only what we need. `docker compose up` starts
+#        the test runner; `docker compose --profile full up` adds a local
+#        mock API server. CI uses the default profile to keep pipelines fast.
+#
+#   Services:
+#     validrix   — test runner (always started)
+#     mockapi    — WireMock for API integration tests (profile: full)
+#     selenium   — Selenium Grid for cross-browser tests (profile: full)
+# =============================================================================
+
+services:
+
+  # ── Test runner ─────────────────────────────────────────────────────────────
+  validrix:
+    build:
+      context: .
+      target: runtime
+    image: validrix:local
+    container_name: validrix-runner
+    environment:
+      - VALIDRIX_ENVIRONMENT=${VALIDRIX_ENVIRONMENT:-dev}
+      - VALIDRIX_AI__ANTHROPIC_API_KEY=${VALIDRIX_AI__ANTHROPIC_API_KEY:-}
+      - VALIDRIX_AI__OPENAI_API_KEY=${VALIDRIX_AI__OPENAI_API_KEY:-}
+      - VALIDRIX_AI__PROVIDER=${VALIDRIX_AI__PROVIDER:-anthropic}
+    volumes:
+      # Mount source for fast iteration without rebuilding
+      - ./validrix:/app/validrix:ro
+      - ./tests:/app/tests:ro
+      - ./validrix.yml:/app/validrix.yml:ro
+      # Reports written inside the container — mount to persist on host
+      - ./validrix_reports:/app/validrix_reports
+    working_dir: /app
+    command: pytest --tb=short -ra
+    depends_on:
+      mockapi:
+        condition: service_healthy
+        required: false
+    networks:
+      - validrix-net
+
+  # ── Mock API server (profile: full) ────────────────────────────────────────
+  mockapi:
+    image: wiremock/wiremock:3.6.0
+    container_name: validrix-mockapi
+    profiles:
+      - full
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./tests/fixtures/wiremock:/home/wiremock:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/__admin/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - validrix-net
+
+  # ── Selenium Grid (profile: full) ───────────────────────────────────────────
+  selenium-hub:
+    image: selenium/hub:4.21
+    container_name: validrix-selenium-hub
+    profiles:
+      - full
+    ports:
+      - "4444:4444"
+    networks:
+      - validrix-net
+
+  selenium-chrome:
+    image: selenium/node-chrome:4.21
+    container_name: validrix-selenium-chrome
+    profiles:
+      - full
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    shm_size: "2g"
+    networks:
+      - validrix-net
+
+networks:
+  validrix-net:
+    driver: bridge
+
+volumes:
+  validrix_reports:

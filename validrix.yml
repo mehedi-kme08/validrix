@@ -1,0 +1,49 @@
+# validrix.yml — Sample framework configuration
+# Copy this to your project root and customise.
+
+environment: dev
+
+ai:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+  max_tokens: 4096
+  temperature: 0.2
+  timeout_seconds: 60
+
+retry:
+  max_attempts: 3
+  delay_seconds: 1.0
+  backoff_multiplier: 2.0
+  jitter: true
+
+flaky:
+  enabled: true
+  runs: 3
+  threshold: 0.5
+  report_path: validrix_reports/flaky_report.json
+
+healing:
+  enabled: true
+  history_path: validrix_reports/healing_history.json
+  fallback_order:
+    - aria-label
+    - text
+    - nearby
+    - css
+
+environments:
+  dev:
+    base_url: http://localhost:3000
+    headless: true
+    slow_mo: 0
+    timeout_ms: 30000
+
+  staging:
+    base_url: https://staging.example.com
+    headless: true
+    timeout_ms: 45000
+
+  prod:
+    base_url: https://example.com
+    headless: true
+    timeout_ms: 60000
