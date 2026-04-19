@@ -36,7 +36,7 @@ import logging
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import pytest
 
@@ -70,11 +70,44 @@ class HealingHistory:
     total_healed: int
     events: list[HealingEvent]
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "total_healed": self.total_healed,
             "events": [asdict(e) for e in self.events],  # type: ignore[arg-type]
         }
+
+
+class LocatorLike(Protocol):
+    """Minimal Playwright locator surface used by HealingPage."""
+
+    def wait_for(self, *, state: str, timeout: int) -> None:
+        """Wait for the locator to resolve."""
+
+
+class ElementLike(Protocol):
+    """Minimal element handle surface used by healing strategies."""
+
+    def get_attribute(self, name: str) -> str | None:
+        """Read an element attribute."""
+
+    def inner_text(self) -> str:
+        """Read visible text content."""
+
+    def evaluate(self, expression: str) -> str | None:
+        """Evaluate JavaScript in the element context."""
+
+
+class PageLike(Protocol):
+    """Minimal Playwright page surface used by the plugin."""
+
+    def query_selector(self, selector: str) -> ElementLike | None:
+        """Resolve one element by selector."""
+
+    def locator(self, selector: str, **kwargs: object) -> LocatorLike:
+        """Create a Playwright locator."""
+
+    def __getattr__(self, name: str) -> object:
+        """Delegate unknown page members."""
 
 
 # ---------------------------------------------------------------------------
@@ -87,7 +120,7 @@ class HealingStrategy(Protocol):
 
     name: str
 
-    def build_selector(self, original: str, page: Any) -> str | None:
+    def build_selector(self, original: str, page: PageLike) -> str | None:
         """
         Attempt to build an alternative selector for the element.
 
@@ -106,7 +139,7 @@ class AriaLabelStrategy:
 
     name = "aria-label"
 
-    def build_selector(self, original: str, page: Any) -> str | None:
+    def build_selector(self, original: str, page: PageLike) -> str | None:
         try:
             # Attempt to find the element by aria-label derived from original selector text
             element = page.query_selector(original)
@@ -124,7 +157,7 @@ class TextContentStrategy:
 
     name = "text"
 
-    def build_selector(self, original: str, page: Any) -> str | None:
+    def build_selector(self, original: str, page: PageLike) -> str | None:
         try:
             element = page.query_selector(original)
             if element:
@@ -141,7 +174,7 @@ class NearbyElementStrategy:
 
     name = "nearby"
 
-    def build_selector(self, original: str, page: Any) -> str | None:
+    def build_selector(self, original: str, page: PageLike) -> str | None:
         try:
             element = page.query_selector(original)
             if element:
@@ -151,7 +184,9 @@ class NearbyElementStrategy:
                         let node = el.parentElement;
                         while (node) {
                             if (node.id) return '#' + node.id;
-                            if (node.dataset.testid) return '[data-testid="' + node.dataset.testid + '"]';
+                            if (node.dataset.testid) {
+                                return '[data-testid="' + node.dataset.testid + '"]';
+                            }
                             node = node.parentElement;
                         }
                         return null;
@@ -170,7 +205,7 @@ class CSSRebuildStrategy:
 
     name = "css"
 
-    def build_selector(self, original: str, page: Any) -> str | None:
+    def build_selector(self, original: str, page: PageLike) -> str | None:
         try:
             element = page.query_selector(original)
             if element:
@@ -190,7 +225,7 @@ class CSSRebuildStrategy:
 
 
 # Default ordered strategy chain
-_DEFAULT_STRATEGIES: list[Any] = [
+_DEFAULT_STRATEGIES: list[HealingStrategy] = [
     AriaLabelStrategy(),
     TextContentStrategy(),
     NearbyElementStrategy(),
@@ -215,9 +250,9 @@ class HealingPage:
 
     def __init__(
         self,
-        page: Any,
+        page: PageLike,
         test_id: str,
-        strategies: list[Any],
+        strategies: list[HealingStrategy],
         config: SelfHealingConfig,
         events: list[HealingEvent],
     ) -> None:
@@ -227,7 +262,7 @@ class HealingPage:
         self._config = config
         self._events = events
 
-    def locator(self, selector: str, **kwargs: Any) -> Any:
+    def locator(self, selector: str, **kwargs: object) -> LocatorLike:
         """
         Return a Playwright Locator, falling back through healing strategies
         if the original selector produces no match.
@@ -244,7 +279,7 @@ class HealingPage:
         logger.info("SelfHealing: selector %r failed. Attempting strategies…", selector)
         return self._heal(selector, kwargs)
 
-    def _heal(self, original: str, kwargs: dict[str, Any]) -> Any:
+    def _heal(self, original: str, kwargs: dict[str, object]) -> LocatorLike:
         start = time.monotonic()
         for strategy in self._strategies:
             alternative = strategy.build_selector(original, self._page)
@@ -283,7 +318,7 @@ class HealingPage:
         )
         return self._page.locator(original, **kwargs)
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         """Delegate all other Page methods transparently."""
         return getattr(self._page, name)
 
@@ -317,7 +352,7 @@ class SelfHealingPlugin:
     @pytest.fixture(name="healing_page")
     def healing_page_fixture(
         self,
-        page: Any,  # Playwright's built-in `page` fixture
+        page: PageLike,  # Playwright's built-in `page` fixture
         request: pytest.FixtureRequest,
     ) -> HealingPage:
         """

@@ -53,9 +53,9 @@ logger = logging.getLogger(__name__)
 
 class FlakinessLabel(StrEnum):
     """Classification of a test's reliability based on its pass rate."""
-    STABLE   = "STABLE"    # Always passes
-    FLAKY    = "FLAKY"     # Mixed results
-    FAILING  = "FAILING"   # Never passes
+    STABLE = "STABLE"  # Always passes
+    FLAKY = "FLAKY"  # Mixed results
+    FAILING = "FAILING"  # Never passes
 
 
 @dataclass

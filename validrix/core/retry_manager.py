@@ -26,11 +26,12 @@ import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any, TypeVar
+from typing import ParamSpec, TypeVar
 
 logger = logging.getLogger(__name__)
 
-F = TypeVar("F", bound=Callable[..., Any])
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 @dataclass
@@ -70,7 +71,7 @@ def retry(
     jitter: bool = True,
     exceptions: Sequence[type[BaseException]] = (Exception,),
     config: RetryConfig | None = None,
-) -> Callable[[F], F]:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Decorator that retries a function on failure with exponential backoff.
 
@@ -108,9 +109,9 @@ def retry(
         exceptions=list(exceptions),
     )
 
-    def decorator(func: F) -> F:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             last_exc: BaseException | None = None
             current_delay = effective.delay_seconds
 
@@ -143,9 +144,10 @@ def retry(
                     time.sleep(sleep_time)
                     current_delay *= effective.backoff_multiplier
 
-            raise last_exc  # type: ignore[misc]
+            assert last_exc is not None
+            raise last_exc
 
-        return wrapper  # type: ignore[return-value]
+        return wrapper
 
     return decorator
 
@@ -166,7 +168,7 @@ class RetryManager:
     def __init__(self, config: RetryConfig | None = None) -> None:
         self.config = config or RetryConfig()
 
-    def execute(self, func: Callable[[], Any]) -> Any:
+    def execute(self, func: Callable[[], R]) -> R:
         """
         Execute ``func`` with the configured retry policy.
 

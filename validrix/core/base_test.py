@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import Any
+from collections.abc import Callable
 
 import pytest
 
@@ -73,7 +73,7 @@ class BaseTest(ABC):
     # Lifecycle
     # ------------------------------------------------------------------
 
-    def setup_method(self, method: Any) -> None:
+    def setup_method(self, method: object) -> None:
         """Per-test setup — called automatically by pytest before each test."""
         self.config = ConfigManager.load()
         self.log = logging.getLogger(type(self).__qualname__)
@@ -86,7 +86,7 @@ class BaseTest(ABC):
         self._soft_failures = []
         self.log.info("Starting test: %s", method.__name__ if callable(method) else method)
 
-    def teardown_method(self, method: Any) -> None:
+    def teardown_method(self, method: object) -> None:
         """Per-test teardown — called automatically by pytest after each test."""
         self.log.info(
             "Finished test: %s",
@@ -132,7 +132,7 @@ class BaseTest(ABC):
 
     def assert_eventually(
         self,
-        condition: Any,
+        condition: Callable[[], bool] | bool,
         timeout_seconds: float = 10.0,
         poll_interval: float = 0.5,
         message: str = "",
@@ -162,4 +162,3 @@ class BaseTest(ABC):
             time.sleep(poll_interval)
 
         pytest.fail(message or f"Condition not met within {timeout_seconds}s")
-

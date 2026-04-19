@@ -49,7 +49,7 @@ class DockerRunner:
                           the current working directory.
 
         Raises:
-            EnvironmentError: If `docker` is not on PATH.
+            OSError: If `docker` is not on PATH.
         """
         if not shutil.which("docker"):
             raise OSError(

@@ -158,7 +158,7 @@ class FrameworkConfig(BaseSettings):
 
     @field_validator("report_dir", mode="before")
     @classmethod
-    def _coerce_report_dir(cls, v: Any) -> Path:
+    def _coerce_report_dir(cls, v: str | Path) -> Path:
         return Path(v)
 
     @model_validator(mode="after")
