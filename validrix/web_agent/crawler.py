@@ -172,7 +172,9 @@ def _extract_forms(page: Page) -> list[FormElement]:
     for item in raw:
         try:
             raw_fields = item.pop("fields", [])
-            field_dicts = raw_fields if isinstance(raw_fields, list) else []
+            if not isinstance(raw_fields, list) or any(not isinstance(field_data, dict) for field_data in raw_fields):
+                raise ValueError("Malformed form fields payload")
+            field_dicts = raw_fields
             fields = [FormField(**field_data) for field_data in field_dicts if isinstance(field_data, dict)]
             forms.append(FormElement(fields=fields, **item))  # type: ignore[arg-type]
         except Exception as exc:
