@@ -71,10 +71,10 @@ _REPORT_ROOT = Path("validrix_reports")
 
 # Pipeline step labels for the UI progress bar
 _STEPS = [
-    (10,  "Crawling website..."),
-    (40,  "Generating test cases..."),
-    (70,  "Executing tests..."),
-    (95,  "Generating AI report..."),
+    (10, "Crawling website..."),
+    (40, "Generating test cases..."),
+    (70, "Executing tests..."),
+    (95, "Generating AI report..."),
     (100, "Complete"),
 ]
 
@@ -220,11 +220,13 @@ async def _run_pipeline(job_id: str, request: AnalyzeRequest) -> None:
             ).crawl(request.url),
         )
         if not crawl_result.succeeded:
-            _jobs[job_id].update({
-                "status": "failed",
-                "current_step": "Crawl failed",
-                "error": crawl_result.error,
-            })
+            _jobs[job_id].update(
+                {
+                    "status": "failed",
+                    "current_step": "Crawl failed",
+                    "error": crawl_result.error,
+                }
+            )
             return
 
         # ── Stage 2: Generate tests ───────────────────────────────────
@@ -241,11 +243,13 @@ async def _run_pipeline(job_id: str, request: AnalyzeRequest) -> None:
             ),
         )
         if not suite.succeeded:
-            _jobs[job_id].update({
-                "status": "failed",
-                "current_step": "Test generation failed",
-                "error": suite.error,
-            })
+            _jobs[job_id].update(
+                {
+                    "status": "failed",
+                    "current_step": "Test generation failed",
+                    "error": suite.error,
+                }
+            )
             return
 
         # ── Stage 3: Execute tests ────────────────────────────────────
@@ -267,12 +271,14 @@ async def _run_pipeline(job_id: str, request: AnalyzeRequest) -> None:
         )
 
         # ── Done ──────────────────────────────────────────────────────
-        _jobs[job_id].update({
-            "status": "complete",
-            "progress": 100,
-            "current_step": "Complete",
-            "result": suite_result,
-        })
+        _jobs[job_id].update(
+            {
+                "status": "complete",
+                "progress": 100,
+                "current_step": "Complete",
+                "result": suite_result,
+            }
+        )
         logger.info(
             "Job %s complete: %d/%d tests passed",
             job_id,
@@ -282,8 +288,10 @@ async def _run_pipeline(job_id: str, request: AnalyzeRequest) -> None:
 
     except Exception as exc:
         logger.exception("Job %s failed with unexpected error: %s", job_id, exc)
-        _jobs[job_id].update({
-            "status": "failed",
-            "current_step": "Internal error",
-            "error": str(exc),
-        })
+        _jobs[job_id].update(
+            {
+                "status": "failed",
+                "current_step": "Internal error",
+                "error": str(exc),
+            }
+        )

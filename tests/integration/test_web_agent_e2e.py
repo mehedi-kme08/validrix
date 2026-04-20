@@ -23,17 +23,22 @@ Design decision: each pipeline stage is its own test function.
 from __future__ import annotations
 
 import os
-import pytest
 from pathlib import Path
 
+import pytest
+
 from validrix.web_agent.crawler import WebCrawler
-from validrix.web_agent.models import CrawlResult, GeneratedTestSuite, TestSuiteResult
+from validrix.web_agent.models import (
+    CrawlResult,
+    GeneratedTestSuite,
+    TestSuiteResult,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
-TARGET_URL  = "https://mhdhasan.netlify.app/"
+TARGET_URL = "https://mhdhasan.netlify.app/"
 TEST_PROMPT = (
     "Verify the page title loads correctly. "
     "Check all main navigation links (About, Skills, Experience, "
@@ -41,9 +46,9 @@ TEST_PROMPT = (
     "Confirm the hero heading contains text. "
     "Test that the contact section is reachable on the page."
 )
-MAX_TESTS   = 8
+MAX_TESTS = 8
 TIMEOUT_SEC = 45
-REPORT_DIR  = Path("validrix_reports") / "e2e_run"
+REPORT_DIR = Path("validrix_reports") / "e2e_run"
 
 # ---------------------------------------------------------------------------
 # Markers
@@ -127,8 +132,7 @@ class TestCrawler:
         all_link_text = " ".join(lk.text.lower() for lk in crawl_result.links)
         for section in ("about", "skills", "experience", "contact"):
             assert section in all_link_text, (
-                f"Navigation link for '{section}' not found. "
-                f"Links found: {[lk.text for lk in crawl_result.links]}"
+                f"Navigation link for '{section}' not found. Links found: {[lk.text for lk in crawl_result.links]}"
             )
 
     def test_internal_links_dominate(self, crawl_result: CrawlResult) -> None:
@@ -144,9 +148,7 @@ class TestCrawler:
 
     def test_visible_text_extracted(self, crawl_result: CrawlResult) -> None:
         """Visible text sample must be non-empty (proves JS rendered correctly)."""
-        assert len(crawl_result.visible_text_sample) > 100, (
-            "Visible text sample too short — page may not have rendered"
-        )
+        assert len(crawl_result.visible_text_sample) > 100, "Visible text sample too short — page may not have rendered"
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +177,7 @@ class TestGenerator:
     def test_combined_code_is_valid_python(self, generated_suite: GeneratedTestSuite) -> None:
         """The combined code file must be syntactically valid Python."""
         import ast
+
         try:
             ast.parse(generated_suite.combined_code)
         except SyntaxError as exc:
@@ -182,9 +185,7 @@ class TestGenerator:
 
     def test_combined_code_contains_test_functions(self, generated_suite: GeneratedTestSuite) -> None:
         """Code must contain at least one pytest-compatible test function."""
-        assert "def test_" in generated_suite.combined_code, (
-            "Generated code has no test_ functions"
-        )
+        assert "def test_" in generated_suite.combined_code, "Generated code has no test_ functions"
 
     def test_combined_code_navigates_to_url(self, generated_suite: GeneratedTestSuite) -> None:
         """Every test suite must navigate to the target URL."""
@@ -241,15 +242,11 @@ class TestExecutor:
         """Every failed test must carry an error message for debugging."""
         for t in suite_result.tests:
             if t.status in ("failed", "error"):
-                assert t.error_message, (
-                    f"Test {t.test_name!r} failed but has no error message"
-                )
+                assert t.error_message, f"Test {t.test_name!r} failed but has no error message"
 
     def test_pass_rate_is_valid_fraction(self, suite_result: TestSuiteResult) -> None:
         """Pass rate must be between 0.0 and 1.0 inclusive."""
-        assert 0.0 <= suite_result.pass_rate <= 1.0, (
-            f"Invalid pass rate: {suite_result.pass_rate}"
-        )
+        assert 0.0 <= suite_result.pass_rate <= 1.0, f"Invalid pass rate: {suite_result.pass_rate}"
 
     def test_majority_of_tests_pass(self, suite_result: TestSuiteResult) -> None:
         """At least 50% of generated tests should pass against the live site.
@@ -276,6 +273,7 @@ class TestReporter:
     @pytest.fixture(scope="class")
     def report_path(self, suite_result: TestSuiteResult, report_dir: Path) -> Path:
         from validrix.web_agent.reporter import WebReporter
+
         reporter = WebReporter()
         return reporter.generate(suite_result, report_dir=report_dir)
 
@@ -306,6 +304,7 @@ class TestReporter:
     def test_json_report_is_valid(self, report_dir: Path) -> None:
         """report.json must be parseable and contain expected keys."""
         import json
+
         json_path = report_dir / "report.json"
         data = json.loads(json_path.read_text(encoding="utf-8"))
         for key in ("url", "prompt", "total_tests", "passed", "failed", "ai_summary"):

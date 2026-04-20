@@ -25,8 +25,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
-
+from pydantic import BaseModel, Field, field_validator
 
 # ---------------------------------------------------------------------------
 # Primitive element models — building blocks of CrawlResult

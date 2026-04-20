@@ -63,9 +63,7 @@ def run_pipeline(
 
     crawl = WebCrawler(timeout_ms=timeout_seconds * 1000, headless=headless).crawl(url)
     suite = WebTestGenerator().generate(crawl=crawl, prompt=prompt, max_tests=max_tests)
-    result = TestExecutor(timeout_seconds=timeout_seconds, headless=headless).run(
-        suite, report_dir=report_dir
-    )
+    result = TestExecutor(timeout_seconds=timeout_seconds, headless=headless).run(suite, report_dir=report_dir)
     result.crawl_result = crawl
     WebReporter().generate(result, report_dir=report_dir)
     return result

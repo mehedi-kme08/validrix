@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import logging
 import time
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import Page, sync_playwright
@@ -342,9 +342,7 @@ class WebCrawler:
 
                 # Surface 4xx/5xx as structured errors rather than empty crawls
                 if response and response.status >= 400:
-                    raise PageNotFoundError(
-                        f"HTTP {response.status} from {url}"
-                    )
+                    raise PageNotFoundError(f"HTTP {response.status} from {url}")
 
                 return CrawlResult(
                     url=url,

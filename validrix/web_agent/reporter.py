@@ -38,7 +38,6 @@ import json
 import logging
 import textwrap
 import time
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
@@ -307,6 +306,7 @@ def _md_to_html(md: str) -> str:
     without pulling in a full Markdown library. This keeps dependencies lean.
     """
     import re
+
     lines = md.splitlines()
     html_lines: list[str] = []
     in_list = False
@@ -315,40 +315,48 @@ def _md_to_html(md: str) -> str:
         # h3/h4 headers
         if line.startswith("#### "):
             if in_list:
-                html_lines.append("</ul>"); in_list = False
+                html_lines.append("</ul>")
+                in_list = False
             html_lines.append(f"<h4>{line[5:]}</h4>")
         elif line.startswith("### "):
             if in_list:
-                html_lines.append("</ul>"); in_list = False
+                html_lines.append("</ul>")
+                in_list = False
             html_lines.append(f"<h3>{line[4:]}</h3>")
         elif line.startswith("## "):
             if in_list:
-                html_lines.append("</ul>"); in_list = False
+                html_lines.append("</ul>")
+                in_list = False
             html_lines.append(f"<h3>{line[3:]}</h3>")
         elif line.startswith("# "):
             if in_list:
-                html_lines.append("</ul>"); in_list = False
+                html_lines.append("</ul>")
+                in_list = False
             html_lines.append(f"<h3>{line[2:]}</h3>")
         # Bullet list items
         elif re.match(r"^[-*] ", line):
             if not in_list:
-                html_lines.append("<ul>"); in_list = True
+                html_lines.append("<ul>")
+                in_list = True
             content = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", line[2:])
             html_lines.append(f"<li>{content}</li>")
         # Numbered list items
         elif re.match(r"^\d+\.\s", line):
             if not in_list:
-                html_lines.append("<ul>"); in_list = True
+                html_lines.append("<ul>")
+                in_list = True
             content = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", re.sub(r"^\d+\.\s", "", line))
             html_lines.append(f"<li>{content}</li>")
         # Empty line
         elif not line.strip():
             if in_list:
-                html_lines.append("</ul>"); in_list = False
+                html_lines.append("</ul>")
+                in_list = False
         # Regular paragraph
         else:
             if in_list:
-                html_lines.append("</ul>"); in_list = False
+                html_lines.append("</ul>")
+                in_list = False
             content = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", line)
             html_lines.append(f"<p>{content}</p>")
 
@@ -402,7 +410,7 @@ def _build_summary_prompt(result: TestSuiteResult) -> str:
             if t.error_message:
                 lines.append(f"Error: {t.error_message}")
             if t.traceback:
-                lines.append(f"Traceback (last 10 lines):\n" + "\n".join((t.traceback or "").splitlines()[-10:]))
+                lines.append("Traceback (last 10 lines):\n" + "\n".join((t.traceback or "").splitlines()[-10:]))
     else:
         lines.append("None — all tests passed!")
 

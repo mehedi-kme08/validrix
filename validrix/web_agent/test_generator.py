@@ -33,7 +33,6 @@ Design decision: Structured crawl data as context, not raw HTML.
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 import textwrap
@@ -146,15 +145,15 @@ def _build_crawl_summary(crawl: CrawlResult) -> str:
     if crawl.buttons:
         btn_lines = []
         for b in crawl.buttons[:20]:
-            label = b.aria_label or b.text or "(no label)"
-            btn_lines.append(f"  - [{b.element_type}] text={b.text!r} aria-label={b.aria_label!r} selector={b.selector!r}")
+            btn_lines.append(
+                f"  - [{b.element_type}] text={b.text!r} aria-label={b.aria_label!r} selector={b.selector!r}"
+            )
         parts.append("BUTTONS:\n" + "\n".join(btn_lines))
 
     if crawl.forms:
         for i, form in enumerate(crawl.forms[:5], 1):
             field_lines = "\n".join(
-                f"      field: name={f.name!r} type={f.field_type} required={f.is_required}"
-                for f in form.fields
+                f"      field: name={f.name!r} type={f.field_type} required={f.is_required}" for f in form.fields
             )
             parts.append(
                 f"FORM {i}: selector={form.selector!r} method={form.method}\n"
@@ -165,10 +164,7 @@ def _build_crawl_summary(crawl: CrawlResult) -> str:
     if crawl.links:
         internal = [lk for lk in crawl.links if not lk.is_external][:15]
         if internal:
-            parts.append(
-                "INTERNAL LINKS:\n"
-                + "\n".join(f"  - {lk.text!r} → {lk.href}" for lk in internal)
-            )
+            parts.append("INTERNAL LINKS:\n" + "\n".join(f"  - {lk.text!r} → {lk.href}" for lk in internal))
 
     if crawl.visible_text_sample:
         parts.append(f"VISIBLE TEXT SAMPLE (first 500 chars):\n{crawl.visible_text_sample[:500]}")
@@ -201,10 +197,7 @@ def _extract_code(raw: str) -> str:
     stripped = raw.strip()
     if stripped:
         return stripped
-    raise ValueError(
-        "AI response contained no extractable Python code. "
-        f"Raw response (first 200 chars): {raw[:200]!r}"
-    )
+    raise ValueError(f"AI response contained no extractable Python code. Raw response (first 200 chars): {raw[:200]!r}")
 
 
 def _add_file_header(code: str, url: str, prompt: str) -> str:
@@ -278,9 +271,7 @@ def _parse_tests_from_code(code: str) -> list[GeneratedTest]:
     ]
 
 
-def _infer_test_type(
-    name: str, docstring: str
-) -> str:
+def _infer_test_type(name: str, docstring: str) -> str:
     """Heuristically classify a test function into a type bucket."""
     combined = (name + " " + docstring).lower()
     if any(kw in combined for kw in ("form", "submit", "input", "fill", "type")):
