@@ -40,6 +40,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import cast
 
 from validrix.web_agent.models import GeneratedTestSuite, TestResult, TestSuiteResult
 
@@ -81,9 +82,11 @@ def _parse_pytest_json(json_path: Path, screenshot_dir: Path) -> list[TestResult
         duration: float = item.get("duration", 0.0)
 
         # Collect error info from the call phase (the actual test body)
-        call_data: dict[str, object] = item.get("call", {}) or {}
-        longrepr: str = call_data.get("longrepr", "") or ""  # type: ignore[assignment]
-        crash: dict[str, object] = call_data.get("crash", {}) or {}
+        call_obj = item.get("call", {}) or {}
+        call_data: dict[str, object] = cast(dict[str, object], call_obj) if isinstance(call_obj, dict) else {}
+        longrepr = str(call_data.get("longrepr", "") or "")
+        crash_obj = call_data.get("crash", {}) or {}
+        crash: dict[str, object] = cast(dict[str, object], crash_obj) if isinstance(crash_obj, dict) else {}
 
         error_message: str | None = None
         traceback: str | None = None

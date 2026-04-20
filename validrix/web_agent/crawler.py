@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import logging
 import time
+from typing import cast
 from urllib.parse import urlparse
 
 from playwright.sync_api import Error as PlaywrightError
@@ -170,7 +171,9 @@ def _extract_forms(page: Page) -> list[FormElement]:
     forms: list[FormElement] = []
     for item in raw:
         try:
-            fields = [FormField(**f) for f in (item.pop("fields", []) or [])]  # type: ignore[union-attr]
+            raw_fields = item.pop("fields", [])
+            field_dicts = raw_fields if isinstance(raw_fields, list) else []
+            fields = [FormField(**field_data) for field_data in field_dicts if isinstance(field_data, dict)]
             forms.append(FormElement(fields=fields, **item))  # type: ignore[arg-type]
         except Exception as exc:
             logger.debug("Skipping malformed form element: %s — %s", item, exc)
@@ -227,11 +230,12 @@ def _extract_images(page: Page) -> list[ImageElement]:
 
 def _extract_headings(page: Page) -> list[str]:
     """Return h1–h3 text nodes in document order."""
-    return page.evaluate(
+    headings = page.evaluate(
         """() => Array.from(document.querySelectorAll('h1, h2, h3'))
                .map(h => h.innerText.trim())
                .filter(t => t.length > 0)"""
     )
+    return cast(list[str], headings)
 
 
 def _extract_visible_text(page: Page, max_chars: int = 2000) -> str:
@@ -362,12 +366,13 @@ class WebCrawler:
 
     @staticmethod
     def _get_meta_description(page: Page) -> str:
-        return page.evaluate(
+        description = page.evaluate(
             """() => {
                 const el = document.querySelector('meta[name="description"]');
                 return el ? el.getAttribute('content') || '' : '';
             }"""
         )
+        return cast(str, description)
 
     @staticmethod
     def _classify_error(exc: Exception) -> str:

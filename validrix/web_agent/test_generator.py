@@ -37,8 +37,9 @@ import logging
 import re
 import textwrap
 import time
+from ast import FunctionDef
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 import anthropic
 import openai
@@ -51,6 +52,8 @@ from validrix.web_agent.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+TestType = Literal["functional", "navigation", "form", "accessibility", "visual"]
 
 # ---------------------------------------------------------------------------
 # System prompt — versioned here, tracked via git
@@ -238,7 +241,7 @@ def _parse_tests_from_code(code: str) -> list[GeneratedTest]:
         ]
 
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
+        if not isinstance(node, FunctionDef):
             continue
         if not node.name.startswith("test_"):
             continue
@@ -249,7 +252,7 @@ def _parse_tests_from_code(code: str) -> list[GeneratedTest]:
         # Extract the source lines for just this function
         func_lines = code.splitlines()
         start = node.lineno - 1
-        end = node.end_lineno if hasattr(node, "end_lineno") else len(func_lines)  # type: ignore[attr-defined]
+        end = node.end_lineno or len(func_lines)
         func_code = "\n".join(func_lines[start:end])
 
         tests.append(
@@ -271,7 +274,7 @@ def _parse_tests_from_code(code: str) -> list[GeneratedTest]:
     ]
 
 
-def _infer_test_type(name: str, docstring: str) -> str:
+def _infer_test_type(name: str, docstring: str) -> TestType:
     """Heuristically classify a test function into a type bucket."""
     combined = (name + " " + docstring).lower()
     if any(kw in combined for kw in ("form", "submit", "input", "fill", "type")):
