@@ -14,7 +14,7 @@ def test_validrix_version_uses_installed_distribution(monkeypatch: object) -> No
     module = importlib.import_module("validrix")
 
     assert module.__version__ == "9.9.9"
-    assert module.__all__ == ["__version__"]
+    assert module.__all__ == ["__version__", "web_agent"]
 
 
 def test_validrix_version_falls_back_when_package_missing(monkeypatch: object) -> None:

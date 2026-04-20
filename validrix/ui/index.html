@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validrix Web Agent</title>
+<style>
+  :root {
+    --bg:      #0f172a;
+    --surface: #1e293b;
+    --border:  #334155;
+    --text:    #e2e8f0;
+    --muted:   #94a3b8;
+    --accent:  #6366f1;
+    --pass:    #22c55e;
+    --fail:    #ef4444;
+    --skip:    #f59e0b;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: .875rem; margin-top: .25rem; text-align: center; }
+  header { text-align: center; margin-bottom: 2.5rem; }
+
+  /* ── Card ────────────────────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* ── Form ────────────────────────────────────────────────── */
+  label { font-size: .8rem; color: var(--muted); text-transform: uppercase;
+          letter-spacing: .06em; font-weight: 600; display: block; margin-bottom: .4rem; }
+  input[type="url"], textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    color: var(--text);
+    font-size: .95rem;
+    padding: .75rem 1rem;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type="url"]:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 100px; font-family: inherit; }
+
+  .field { margin-bottom: 1.25rem; }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+  }
+  .option-item { display: flex; flex-direction: column; }
+  input[type="number"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    color: var(--text);
+    font-size: .9rem;
+    padding: .6rem .85rem;
+    outline: none;
+    width: 100%;
+  }
+  input[type="number"]:focus { border-color: var(--accent); }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: .875rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: .6rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:hover:not(:disabled) { opacity: .9; }
+  .btn:active:not(:disabled) { transform: scale(.98); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Progress ────────────────────────────────────────────── */
+  #progress-section { display: none; margin-top: 1.75rem; }
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    font-size: .875rem;
+    color: var(--muted);
+    transition: color .2s;
+  }
+  .step.active { color: var(--text); }
+  .step.done   { color: var(--pass); }
+  .step-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); flex-shrink: 0; transition: background .2s;
+  }
+  .step.active .step-dot { background: var(--accent); animation: pulse 1s infinite; }
+  .step.done   .step-dot { background: var(--pass); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  .progress-bar-wrap {
+    height: 6px; background: var(--border); border-radius: 999px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; background: var(--accent); border-radius: 999px;
+    transition: width .5s ease; width: 0%;
+  }
+  .progress-label {
+    font-size: .75rem; color: var(--muted); margin-top: .4rem; text-align: right;
+  }
+
+  /* ── Results ─────────────────────────────────────────────── */
+  #results-section { display: none; margin-top: 1.75rem; }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .6rem;
+    margin-bottom: 1.25rem;
+  }
+  .summary-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: .6rem;
+    padding: .875rem .5rem;
+    text-align: center;
+  }
+  .summary-card .val { font-size: 1.75rem; font-weight: 700; }
+  .summary-card .lbl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .val.pass { color: var(--pass); }
+  .val.fail { color: var(--fail); }
+  .val.skip { color: var(--skip); }
+  .val.total { color: var(--accent); }
+
+  .ai-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: .6rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: .875rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .ai-box h4 { color: var(--text); font-size: .8rem; text-transform: uppercase;
+               letter-spacing: .06em; margin-bottom: .5rem; }
+
+  .test-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; }
+  .test-row {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: .6rem;
+    overflow: hidden;
+  }
+  .test-row-header {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .75rem 1rem; cursor: pointer; user-select: none;
+  }
+  .test-row-header:hover { background: rgba(255,255,255,.03); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot.passed  { background: var(--pass); }
+  .dot.failed  { background: var(--fail); }
+  .dot.skipped { background: var(--skip); }
+  .dot.error   { background: var(--fail); }
+  .test-row-name { flex: 1; font-size: .82rem; font-family: monospace; }
+  .test-row-dur  { font-size: .72rem; color: var(--muted); }
+  .test-row-chevron { font-size: .65rem; color: var(--muted); transition: transform .2s; }
+  .test-row.open .test-row-chevron { transform: rotate(90deg); }
+  .test-row-body { display: none; padding: .75rem 1rem; border-top: 1px solid var(--border); }
+  .test-row.open .test-row-body { display: block; }
+  .error-text { color: var(--fail); font-size: .8rem; white-space: pre-wrap; font-family: monospace;
+                background: rgba(239,68,68,.08); padding: .75rem; border-radius: .4rem; }
+
+  .report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1.2rem;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: .5rem;
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s;
+  }
+  .report-btn:hover { background: rgba(99,102,241,.12); }
+
+  /* ── Error banner ────────────────────────────────────────── */
+  .error-banner {
+    display: none;
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.3);
+    border-radius: .6rem;
+    color: #fca5a5;
+    padding: .875rem 1.25rem;
+    font-size: .875rem;
+    margin-top: 1rem;
+  }
+
+  footer {
+    margin-top: 2.5rem;
+    font-size: .75rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Validrix <span>Web Agent</span></div>
+  <p class="tagline">URL + prompt → AI crawls, generates &amp; runs tests → full report</p>
+</header>
+
+<div class="card">
+  <!-- ── Input form ── -->
+  <form id="form" onsubmit="startAnalysis(event)">
+    <div class="field">
+      <label for="url">Website URL</label>
+      <input type="url" id="url" name="url" required
+             placeholder="https://example.com"
+             value="">
+    </div>
+
+    <div class="field">
+      <label for="prompt">What to test (plain English)</label>
+      <textarea id="prompt" name="prompt" required
+                placeholder="Example: Test the login flow with valid and invalid credentials. Check that the contact form validates required fields. Verify all navigation links work correctly."></textarea>
+    </div>
+
+    <div class="options-grid">
+      <div class="option-item">
+        <label for="max_tests">Max tests</label>
+        <input type="number" id="max_tests" value="10" min="1" max="30">
+      </div>
+      <div class="option-item">
+        <label for="timeout">Timeout (seconds)</label>
+        <input type="number" id="timeout" value="60" min="10" max="300">
+      </div>
+    </div>
+
+    <button class="btn" type="submit" id="submit-btn">⚡ Analyse Website</button>
+  </form>
+
+  <!-- ── Error banner ── -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- ── Progress ── -->
+  <div id="progress-section">
+    <div class="steps">
+      <div class="step" id="step-crawl">
+        <div class="step-dot"></div>
+        <span>Crawling website...</span>
+      </div>
+      <div class="step" id="step-generate">
+        <div class="step-dot"></div>
+        <span>Generating test cases...</span>
+      </div>
+      <div class="step" id="step-execute">
+        <div class="step-dot"></div>
+        <span>Running tests in Playwright...</span>
+      </div>
+      <div class="step" id="step-report">
+        <div class="step-dot"></div>
+        <span>Generating AI report...</span>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-label" id="progress-label">0%</div>
+  </div>
+
+  <!-- ── Results ── -->
+  <div id="results-section">
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="val total" id="r-total">0</div>
+        <div class="lbl">Total</div>
+      </div>
+      <div class="summary-card">
+        <div class="val pass" id="r-passed">0</div>
+        <div class="lbl">Passed</div>
+      </div>
+      <div class="summary-card">
+        <div class="val fail" id="r-failed">0</div>
+        <div class="lbl">Failed</div>
+      </div>
+      <div class="summary-card">
+        <div class="val skip" id="r-skipped">0</div>
+        <div class="lbl">Skipped</div>
+      </div>
+    </div>
+
+    <div class="ai-box" id="ai-summary-box">
+      <h4>⚡ AI Summary</h4>
+      <div id="ai-summary-text"></div>
+    </div>
+
+    <div class="test-list" id="test-list"></div>
+
+    <a class="report-btn" id="report-link" href="#" target="_blank">
+      ↓ Open Full HTML Report
+    </a>
+  </div>
+</div>
+
+<footer>
+  <a href="https://github.com/mehedi-kme08/validrix" target="_blank">Validrix</a>
+  &mdash; AI-Powered Test Automation Framework
+</footer>
+
+<script>
+  let _pollTimer = null;
+  let _jobId = null;
+
+  // ── Step index based on progress %
+  function updateSteps(progress) {
+    const steps = ['step-crawl', 'step-generate', 'step-execute', 'step-report'];
+    const thresholds = [10, 40, 70, 95];
+    steps.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (progress > thresholds[i]) {
+        el.className = 'step done';
+      } else if (progress >= (thresholds[i - 1] ?? 0)) {
+        el.className = 'step active';
+      } else {
+        el.className = 'step';
+      }
+    });
+  }
+
+  function setProgress(pct, label) {
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = label || (pct + '%');
+    updateSteps(pct);
+  }
+
+  function showError(msg) {
+    const banner = document.getElementById('error-banner');
+    banner.textContent = '⚠ ' + msg;
+    banner.style.display = 'block';
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('submit-btn').textContent = '⚡ Analyse Website';
+  }
+
+  function toggleRow(el) {
+    el.closest('.test-row').classList.toggle('open');
+  }
+
+  function renderResults(result, jobId) {
+    document.getElementById('progress-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+
+    document.getElementById('r-total').textContent   = result.total_tests;
+    document.getElementById('r-passed').textContent  = result.passed;
+    document.getElementById('r-failed').textContent  = result.failed;
+    document.getElementById('r-skipped').textContent = result.skipped;
+
+    // AI summary — render newlines as paragraphs
+    const summaryEl = document.getElementById('ai-summary-text');
+    summaryEl.innerHTML = (result.ai_summary || 'No summary generated.')
+      .split('\n').filter(l => l.trim()).map(l => `<p>${l}</p>`).join('');
+
+    // Per-test list
+    const listEl = document.getElementById('test-list');
+    listEl.innerHTML = '';
+    (result.tests || []).forEach(t => {
+      const shortName = t.test_name.split('::').pop();
+      const row = document.createElement('div');
+      row.className = 'test-row' + (t.status === 'failed' || t.status === 'error' ? ' open' : '');
+      row.innerHTML = `
+        <div class="test-row-header" onclick="this.closest('.test-row').classList.toggle('open')">
+          <div class="dot ${t.status}"></div>
+          <span class="test-row-name">${shortName}</span>
+          <span class="test-row-dur">${(t.duration || 0).toFixed(2)}s</span>
+          <span class="test-row-chevron">▶</span>
+        </div>
+        <div class="test-row-body">
+          <p style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">${t.test_name}</p>
+          ${t.error_message ? `<div class="error-text">${t.error_message}</div>` : ''}
+          ${t.status === 'passed' ? '<p style="color:var(--pass);font-size:.85rem">✓ Test passed</p>' : ''}
+        </div>`;
+      listEl.appendChild(row);
+    });
+
+    // Report link
+    const link = document.getElementById('report-link');
+    link.href = `/api/report/${jobId}/html`;
+    link.style.display = 'inline-flex';
+
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('submit-btn').textContent = '⚡ Analyse Website';
+  }
+
+  async function poll(jobId) {
+    try {
+      const res = await fetch(`/api/status/${jobId}`);
+      if (!res.ok) { showError('Failed to fetch job status.'); return; }
+      const data = await res.json();
+
+      setProgress(data.progress, data.current_step);
+
+      if (data.status === 'complete') {
+        setProgress(100, 'Complete!');
+        const reportRes = await fetch(`/api/report/${jobId}`);
+        if (!reportRes.ok) { showError('Failed to fetch report.'); return; }
+        const result = await reportRes.json();
+        renderResults(result, jobId);
+        return; // stop polling
+      }
+
+      if (data.status === 'failed') {
+        showError(data.error || 'Pipeline failed. Check server logs.');
+        return;
+      }
+
+      _pollTimer = setTimeout(() => poll(jobId), 2000);
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    }
+  }
+
+  async function startAnalysis(e) {
+    e.preventDefault();
+
+    // Reset UI
+    document.getElementById('error-banner').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('progress-section').style.display = 'block';
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').textContent = 'Running...';
+    setProgress(0, 'Starting...');
+    ['step-crawl','step-generate','step-execute','step-report'].forEach(id => {
+      document.getElementById(id).className = 'step';
+    });
+
+    clearTimeout(_pollTimer);
+
+    const body = {
+      url:     document.getElementById('url').value.trim(),
+      prompt:  document.getElementById('prompt').value.trim(),
+      options: {
+        max_tests:          parseInt(document.getElementById('max_tests').value) || 10,
+        timeout_seconds:    parseInt(document.getElementById('timeout').value) || 60,
+        screenshot_on_pass: false,
+        headless:           true,
+      }
+    };
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        showError(err.detail || 'Failed to start analysis.');
+        return;
+      }
+      const { job_id } = await res.json();
+      _jobId = job_id;
+      poll(job_id);
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    }
+  }
+</script>
+</body>
+</html>

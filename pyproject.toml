@@ -71,6 +71,11 @@ dependencies = [
 
     # Reporting
     "jinja2>=3.1,<4",                   # HTML report templating
+
+    # Web Agent — new in v0.2
+    "fastapi>=0.111,<1",                # async API server for web_agent
+    "uvicorn[standard]>=0.29,<1",       # ASGI server (websocket + h11)
+    "pytest-json-report>=1.5,<2",       # structured JSON output for executor.py
 ]
 
 # ---------------------------------------------------------------------------
@@ -105,7 +110,8 @@ validrix-ai-report  = "validrix.plugins.ai_reporter"
 # CLI entry point — installs `validrix` command
 # ---------------------------------------------------------------------------
 [project.scripts]
-validrix = "validrix.cli.framework_cli:cli"
+validrix        = "validrix.cli.framework_cli:cli"
+validrix-server = "uvicorn:main"     # convenience: validrix-server validrix.api:app --reload
 
 # ---------------------------------------------------------------------------
 # Tool configuration

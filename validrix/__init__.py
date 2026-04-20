@@ -13,4 +13,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0.0.0-dev"
 
-__all__ = ["__version__"]
+__all__ = ["__version__", "web_agent"]
+
+# web_agent is imported lazily — `from validrix import web_agent` triggers it
+# without paying the cost of Playwright + FastAPI imports for CLI-only usage.

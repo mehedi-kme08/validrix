@@ -42,6 +42,35 @@ services:
     networks:
       - validrix-net
 
+  # ── Web Agent server (profile: web) ────────────────────────────────────────
+  web-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.web-agent
+      target: runtime
+    image: validrix-web-agent:local
+    container_name: validrix-web-agent
+    profiles:
+      - web
+    ports:
+      - "8000:8000"
+    environment:
+      - VALIDRIX_ENVIRONMENT=${VALIDRIX_ENVIRONMENT:-dev}
+      - VALIDRIX_AI__ANTHROPIC_API_KEY=${VALIDRIX_AI__ANTHROPIC_API_KEY:-}
+      - VALIDRIX_AI__OPENAI_API_KEY=${VALIDRIX_AI__OPENAI_API_KEY:-}
+      - VALIDRIX_AI__PROVIDER=${VALIDRIX_AI__PROVIDER:-anthropic}
+    volumes:
+      # Reports directory persisted to host so HTML reports survive restarts
+      - ./validrix_reports:/app/validrix_reports
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - validrix-net
+
   # ── Mock API server (profile: full) ────────────────────────────────────────
   mockapi:
     image: wiremock/wiremock:3.6.0

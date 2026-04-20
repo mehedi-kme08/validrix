@@ -1,16 +1,38 @@
+# Python bytecode
 __pycache__/
 *.py[cod]
+
+# Build artefacts
 *.egg-info/
 dist/
 build/
+
+# Virtual environments
 .venv/
 .env
 *.env.*
+
+# Tool caches (regenerated automatically — never commit)
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Test temp directories (created by pytest tmp_path fixture)
+.pytest_tmp*/
+.test_tmp/
+
+# Claude Code / Codex internal working directories
+.codex_tmp/
+.codex_tmp_build/
+.codex_hatch/
+
+# Coverage
 htmlcov/
 .coverage
 coverage.xml
+
+# Generated reports
 validrix_reports/
+
+# Logs
 *.log

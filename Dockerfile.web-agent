@@ -1,0 +1,67 @@
+# =============================================================================
+# Dockerfile.web-agent — Validrix Web Agent server image
+#
+# Design decision: Separate Dockerfile from the test-runner Dockerfile.
+#   WHY: The web_agent image needs uvicorn + FastAPI and must expose a port.
+#        Merging it with the test-runner CMD would require runtime flags to
+#        switch modes and would confuse CI pipelines that pull one or the other.
+#        Two small, focused Dockerfiles are clearer than one parameterised one.
+#
+#   Port: 8000 (FastAPI default via uvicorn)
+#   User: non-root `validrix` user (same as test-runner image)
+# =============================================================================
+
+# ── Stage 1: builder ─────────────────────────────────────────────────────────
+FROM python:3.11-slim-bookworm AS builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml README.md LICENSE ./
+COPY validrix/ ./validrix/
+
+# Install all deps including fastapi/uvicorn added in pyproject.toml
+RUN pip install --no-cache-dir --prefix=/install "."
+
+# ── Stage 2: runtime ─────────────────────────────────────────────────────────
+FROM python:3.11-slim-bookworm AS runtime
+
+LABEL org.opencontainers.image.title="Validrix Web Agent"
+LABEL org.opencontainers.image.description="AI-powered website test generation server"
+LABEL org.opencontainers.image.source="https://github.com/mehedi-kme08/validrix"
+
+# Chromium runtime libraries (same set as base Dockerfile)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 \
+    libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
+    libpango-1.0-0 libpangocairo-1.0-0 libgtk-3-0 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /install /usr/local
+
+WORKDIR /app
+
+COPY validrix/ ./validrix/
+COPY pyproject.toml ./
+
+# Install browsers in their own layer so app code changes don't re-download
+RUN playwright install chromium --with-deps
+
+RUN useradd --create-home --shell /bin/bash validrix && \
+    mkdir -p /app/validrix_reports && \
+    chown -R validrix:validrix /app
+USER validrix
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    VALIDRIX_ENVIRONMENT=dev
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/api/ || exit 1
+
+CMD ["uvicorn", "validrix.api:app", "--host", "0.0.0.0", "--port", "8000"]
