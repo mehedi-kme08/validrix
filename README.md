@@ -35,14 +35,36 @@ Validrix is a pytest plugin framework that brings AI into every stage of your te
 
 ---
 
+## What do I need to use each feature?
+
+| Capability | Python | Playwright | API Key |
+|---|---|---|---|
+| **Flaky Test Detector** | Yes | No | No — runs entirely locally |
+| **Self-Healing Locators** | Yes | Yes | No — no AI calls needed |
+| **BaseTest + RetryManager** | Yes | No | No — pure Python |
+| **AI Test Generator** | Yes | No | **Yes** — calls Claude/OpenAI to write tests |
+| **AI Failure Summariser** | Yes | No | **Yes** — calls Claude/OpenAI to explain failures |
+| **Web Agent — crawl only** | Yes | Yes | No — Playwright crawls the site locally |
+| **Web Agent — full pipeline** | Yes | Yes | **Yes** — Claude writes and summarises the tests |
+
+> **API key = Anthropic API key** (not Claude Pro). Get one free at [console.anthropic.com](https://console.anthropic.com).
+> New accounts receive $5 in free credits. Each Web Agent run costs roughly $0.01–0.05.
+> Claude Pro (claude.ai) and the Anthropic API are **separate products** — a Pro subscription does not cover API usage.
+
+---
+
 ## 📦 Installation
 
 **From PyPI:**
 
 ```bash
 pip install validrix
-playwright install chromium
+python -m playwright install chromium
 ```
+
+> **Windows note:** If `playwright` or `validrix` is not recognised as a command, use
+> `python -m playwright install chromium` and add the scripts folder to PATH:
+> `C:\Users\<you>\AppData\Roaming\Python\Python312\Scripts`
 
 **From source (development):**
 
@@ -50,11 +72,11 @@ playwright install chromium
 git clone https://github.com/mehedi-kme08/validrix.git
 cd validrix
 pip install -e ".[dev]"
-playwright install chromium
-pre-commit install
+python -m playwright install chromium
+python -m pre_commit install
 ```
 
-**Set your AI API key** (required for all AI features):
+**Set your AI API key** — only needed for AI Test Generator, AI Failure Summariser, and Web Agent full pipeline:
 
 ```bash
 # Linux / macOS
@@ -63,6 +85,9 @@ export VALIDRIX_AI__ANTHROPIC_API_KEY="sk-ant-..."
 # Windows PowerShell
 $env:VALIDRIX_AI__ANTHROPIC_API_KEY = "sk-ant-..."
 ```
+
+> Get your key at [console.anthropic.com](https://console.anthropic.com) → API Keys → Create Key.
+> Flaky detector, self-healing locators, and Web Agent crawl-only mode work without any API key.
 
 **Minimal `validrix.yml`** in your project root:
 
@@ -88,6 +113,8 @@ Validrix has five core capabilities. Each works independently — use one, some,
 ---
 
 ### 1. AI Test Generator
+
+> **Requires:** Python · Anthropic or OpenAI API key
 
 **What it does:** Converts a plain-English description of a feature or page into a complete, runnable `pytest` file.
 
@@ -182,6 +209,8 @@ class TestLoginPage:
 
 ### 2. Self-Healing Locators
 
+> **Requires:** Python · Playwright — no API key needed
+
 **What it does:** Wraps Playwright's `Page` object so that when a CSS selector fails, Validrix automatically tries a chain of fallback strategies before the test fails. Every healing event is logged to `healing_history.json`.
 
 **When to use it:** UI tests that break every sprint when designers rename elements, change IDs, or restructure the DOM.
@@ -256,6 +285,8 @@ healing:
 
 ### 3. Flaky Test Detector
 
+> **Requires:** Python only — no API key, no Playwright needed
+
 **What it does:** Runs each test N times in a single session and computes a pass rate and flakiness score. Generates both a JSON report and a self-contained HTML dashboard.
 
 **When to use it:** Before merging a branch to catch tests that pass 70% of the time, or as a nightly job to audit suite reliability.
@@ -320,6 +351,8 @@ Examples:
 ---
 
 ### 4. AI Failure Summariser
+
+> **Requires:** Python · Anthropic or OpenAI API key
 
 **What it does:** After a test session ends, collects all failures and sends them in a single batch to Claude. Returns a Markdown root-cause analysis with severity ratings and suggested fixes. Works as a post-session pytest hook — zero extra commands needed.
 
@@ -389,6 +422,8 @@ header. Fixing conftest.py:42 should resolve all three failures.
 ---
 
 ### 5. BaseTest + RetryManager
+
+> **Requires:** Python only — no API key, no Playwright needed
 
 **What it does:** `BaseTest` is an optional abstract base class that gives your test classes typed config access, a pre-configured retry manager, soft assertions (collect multiple failures without stopping), and polling assertions.
 
@@ -475,6 +510,18 @@ def poll_background_job(job_id: str) -> str:
 
 **When to use it:** Auditing a third-party site, smoke-testing a deployment, onboarding to an unfamiliar frontend, or demonstrating test automation in a demo.
 
+### What you need
+
+| Stage | What it uses | API key required? |
+|---|---|---|
+| **Stage 1 — Crawl** | Playwright (Chromium) | No — runs locally |
+| **Stage 2 — Generate tests** | Claude / OpenAI | **Yes** |
+| **Stage 3 — Execute tests** | pytest + Playwright | No — runs locally |
+| **Stage 4 — AI summary + report** | Claude / OpenAI | **Yes** (skipped gracefully if absent) |
+
+> You can run Stage 1 alone to inspect what Validrix sees on a page — no API key needed.
+> Stages 2 and 4 are the only steps that make API calls.
+
 ### How it works
 
 ```
@@ -485,14 +532,36 @@ URL + Prompt
 │  WebCrawler  │──▶│  WebTestGenerator │──▶│  TestExecutor  │──▶│  WebReporter │
 │ (Playwright) │   │   (Claude API)    │   │    (pytest)    │   │ (AI + HTML)  │
 └──────────────┘   └───────────────────┘   └────────────────┘   └──────────────┘
-  Extracts title,    Turns crawl data         Runs tests in         AI summary +
-  headings, forms,   + your prompt into       headless Chromium,    dark-theme
-  buttons, links     a full .py test file     captures screenshots  HTML report
+  No API key         API key required         No API key           API key for
+  Extracts title,    Turns crawl data         Runs tests in        AI summary;
+  headings, forms,   + your prompt into       headless Chromium,   HTML report
+  buttons, links     a full .py test file     captures screenshots always written
 ```
 
-### Option A — One-liner Python API
+### Option A — Crawl only (no API key needed)
+
+Just want to see what Validrix finds on a page before committing to a full run?
 
 ```python
+from validrix.web_agent.crawler import WebCrawler
+
+crawler = WebCrawler(timeout_ms=30_000, headless=True)
+result = crawler.crawl("https://mhdhasan.netlify.app/")
+
+print(f"Title    : {result.title}")
+print(f"Headings : {result.headings}")
+print(f"Buttons  : {len(result.buttons)}")
+print(f"Forms    : {len(result.forms)}")
+print(f"Links    : {len(result.links)}")
+print(f"Duration : {result.crawl_duration:.1f}s")
+```
+
+No API key needed — Playwright runs locally.
+
+### Option B — Full pipeline (API key required)
+
+```python
+# Requires: VALIDRIX_AI__ANTHROPIC_API_KEY set in environment
 from validrix.web_agent import run_pipeline
 from pathlib import Path
 
@@ -516,7 +585,7 @@ print(f"Report   : {result.report_path}")
 print(f"\nAI Summary:\n{result.ai_summary}")
 ```
 
-### Option B — FastAPI server + Web UI
+### Option C — FastAPI server + Web UI
 
 ```bash
 # Start the server
@@ -527,7 +596,7 @@ uvicorn validrix.api:app --reload --port 8000
 # Paste your URL, type your prompt, click Analyse — watch the progress bar
 ```
 
-### Option C — REST API (curl / any HTTP client)
+### Option D — REST API (curl / any HTTP client)
 
 ```bash
 # Step 1: start a job
@@ -555,7 +624,7 @@ curl http://localhost:8000/api/report/a3f2e1c0-...
 open http://localhost:8000/api/report/a3f2e1c0-.../html
 ```
 
-### Option D — Docker
+### Option E — Docker
 
 ```bash
 # Build and run the Web Agent server (profile: web)
@@ -791,8 +860,8 @@ cd validrix
 
 # 2. Install dev dependencies
 pip install -e ".[dev]"
-playwright install chromium
-pre-commit install
+python -m playwright install chromium
+python -m pre_commit install
 
 # 3. Create a feature branch
 git checkout -b feat/my-feature
